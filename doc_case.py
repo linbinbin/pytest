@@ -15,9 +15,10 @@ if __name__ == "__main__":
         exit(1)
     no_auth = False
     case_num = 0
+    print argv[2]
     for id in argv[1].split(','):
-        print id, ': V301_Inspection_0022_{0:03d}'.format(case_num)
-        ret = mktest.cmd(id,  None, chk(id.split('_')), 'V301_Inspection_0022_{0:03d}'.format(case_num))
+        print id, ': {1}_{0:03d}'.format(case_num, argv[2])
+        ret = mktest.cmd(id,  None, chk(id.split('_')), '{1}_{0:03d}'.format(case_num, argv[2]))
         case_num += 1
         if ret!= 0:
             print id + " mkshell error " + ret
