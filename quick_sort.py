@@ -1,8 +1,3 @@
-
-# coding: utf-8
-
-# In[8]:
-
 #!/usr/bin/env python
 
 """
@@ -13,10 +8,9 @@ def quick_sort(a):
     b1=[]
     b2=[]
     b3=[]
-#    c=[]
     if len(a)>1:
         val = a[random.randrange(0, len(a))]
-        for i in len(a):
+        for i in range(len(a)):
             if a[i] < val:
                 b1.append(a[i])
             elif a[i] > val:
@@ -33,15 +27,5 @@ def quick_sort(a):
     else:
         return a
 
-merge_sort([2,3,1,6,5,4])
-
-
-# In[7]:
-
-merge_sort([3,2])
-
-
-# In[ ]:
-
-
+print(quick_sort([2,3,1,6,5,4]))
 

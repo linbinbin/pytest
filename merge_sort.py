@@ -30,4 +30,4 @@ def merge_sort(a):
     else:
         return a
 
-merge_sort([2,3,1,6,5,4])
+print(merge_sort([2,3,1,6,5,4]))
