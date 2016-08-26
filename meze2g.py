@@ -2,7 +2,7 @@
 #import sys
 #import random
 #import pprint as pp
-from queue import Queue
+import heapq
 import networkx as nx
 import matplotlib.pyplot as plt
 import math
@@ -24,6 +24,13 @@ class Node:
         self.name = name
         self.edges = []
         self.dis = 0
+        self.poks = 0
+        self.pre = ''
+        self.used = 0
+        self.next = ''
+        self.branch = []
+    def __cmp__(self, other):
+        return 1 if self.name > other.name else 0
 class Edge:
     """Edge info class"""
     def __init__(self, start, end, ndis, npok):
@@ -109,7 +116,50 @@ for key in nodes:
 print("Node:{0}, Edge:{1}, Pokemon:{2}".format(vs+1, len(edges), pok))
 print([x for x in edges if x[0]=='s' or x[0]=='t' or x[1] == 's' or x[1] == 't'])
 
-rout = Queue()
+# ダイクストラ法でｓ->t,Pの最小ルートを探索（Pは負）
+#rout = heapq()
+rout = list()
+outs = list()
+pathes = dict()
+nodes['s'].used = 1
+for edge in nodes['s'].edges:
+    nn = edge[0] if str(edge[0]) != 's' else edge[1]
+    vn = nodes[str(nn)]
+    vn.dis, vn.poks, vn.pre = edge[2], edge[3], 's'
+    heapq.heappush(rout, ((vn.poks, vn.dis),vn))
+while len(rout)>0:
+    v = heapq.heappop(rout)[1]
+    v.used = 1
+    print(len(rout))
+    for edge in v.edges:
+        nn = edge[0] if str(edge[0]) != v.name else edge[1]
+        vn = nodes[str(nn)]
+        if vn.used == 0:
+            if vn.dis == 0:
+                vn.poks = v.poks + edge[3]
+                vn.dis = v.dis + edge[2]
+                vn.pre = v.name
+            else:
+                if vn.poks > v.poks + edge[3]:
+                    vn.poks = v.poks + edge[3]
+                    vn.pre = v.name            
+                elif vn.poks == v.poks + edge[3] and vn.dis > v.dis + edge[2]:
+                    vn.dis = v.dis + edge[2]
+                    vn.pre = v.name
+        try:
+            heapq.heappush(rout, ((vn.poks, vn.dis),vn))
+        except:
+            print(vn)
+v = nodes['t']
+while v.pre != '':
+    print(v.name, '->')            
+    v = nodes[v.pre]
+# 残りのPを持つEdgeを探索
+#　最小ルート点と直接,最小ルート点からのルート追加
+#　追加したルートの点と直接
+
+#　共通点ないEdge、tからダイクストラ法で最短ルートを探索
+#　既存ルートと共通点がある場合、共通点へのルート追加
 
 G = nx.Graph()
 srcs, dests = zip(* [(fr, to) for (fr, to, d, p) in edges])
