@@ -80,7 +80,7 @@ def getEdge(arr, i, j, edges, v, c, p):
                 cp = 0
             getEdge(arr, i+2*a, j+2*b, edges, vn, cn, cp)
 
-for line in open('maze.txt', 'r'):
+for line in open('maze2.txt', 'r'):
     arr.append(list(line))
 height = len(arr)
 width = len(arr[height - 1])
@@ -104,8 +104,9 @@ for i,j in it.product(cellidi, cellidj):
         nodes[str(vs)] = Node(i, j, str(vs))
                
 # Set Edge　for graph
-getEdge(arr, nodes['s'].x, nodes['s'].y, edges, 1, 1, 0)
-edge_labels=dict([((u,v,),(d, p))
+#getEdge(arr, nodes['s'].x, nodes['s'].y, edges, 1, 1, 0)
+getEdge(arr, 3, 7, edges, 1, 1, 0)
+edge_labels=dict([((u,v),(d, p))
              for u,v,d,p in edges])
 # Sort the Node's edge by p and d
 for key in nodes:
@@ -113,9 +114,10 @@ for key in nodes:
 #    if len(nodes[key].edges)>2:
 #        print([list(x) for x in nodes[key].edges])
 
-        
+print([x for x in edges])
+print([(node[1].name, node[1].x, node[1].y) for node in nodes.items()])        
 print("Node:{0}, Edge:{1}, Pokemon:{2}".format(vs+1, len(edges), pok))
-print([x for x in edges if x[0]=='s' or x[0]=='t' or x[1] == 's' or x[1] == 't'])
+#print([x for x in edges if x[0]=='s' or x[0]=='t' or x[1] == 's' or x[1] == 't'])
 
 # ダイクストラ法でｓ->t,Pの最小ルートを探索（Pは負）
 #rout = heapq()
@@ -149,21 +151,6 @@ while len(rout)>0:
                     vn.pre = v.name
             heapq.heappush(rout, ((vn.poks, vn.dis),vn))
 
-rp = ""
-v = nodes['t']
-while v.pre != '':
-    rp += "{0}({1},{2})->".format(v.name, v.x, v.y)            
-    v = nodes[v.pre]
-rp += "{0}({1},{2})".format(v.name, v.x, v.y)
-print(rp)
-# 残りのPを持つEdgeを探索
-#　最小ルート点と直接,最小ルート点からのルート追加
-#　追加したルートの点と直接
-
-#　共通点ないEdge、tからダイクストラ法で最短ルートを探索
-#　既存ルートと共通点がある場合、共通点へのルート追加
-
-"""
 G = nx.Graph()
 srcs, dests = zip(* [(fr, to) for (fr, to, d, p) in edges])
 G.add_nodes_from(srcs + dests)
@@ -173,11 +160,38 @@ for (s,r,d,p) in edges:
 
 pos = nx.spring_layout(G)
 
-plt.figure(figsize=(100, 80))
+plt.figure(figsize=(10, 8))
 nx.draw_networkx(G, pos, with_labels=True, edge_vmin=10)
 nx.draw_networkx_edge_labels(G,pos,edge_labels=edge_labels)
 
 plt.axis('off')
 plt.savefig('map.png', dpi=100)
 #plt.show()
-"""
+
+edgess=dict([((str(u),str(v)),(d, p))
+             for u,v,d,p in edges])
+rp = ""
+v = nodes['t']
+d = v.dis
+p = 0
+while v.pre != '':
+    rp += "{0}({1},{2}) <- ".format(v.name, v.x+1, v.y+1)            
+    vp = nodes[v.pre]
+    vp.next = v.name
+    if (v.name, vp.name) in edgess:
+        p += edgess[(v.name, vp.name)][1]
+        del edgess[(v.name, vp.name)]
+    else:
+        p += edgess[(vp.name, v.name)][1]
+        del edgess[(vp.name, v.name)]
+    v = vp
+rp += "{0}({1},{2}) d:{3} p:{4}".format(v.name, v.x+1, v.y+1, d, -p)
+print(rp)
+
+# 残りのPを持つEdgeを探索
+#　最小ルート点と直接,最小ルート点からのルート追加
+out = dict()
+
+
+#　共通点ないEdge、tからダイクストラ法で最短ルートを探索
+#　既存ルートと共通点がある場合、共通点へのルート追加
