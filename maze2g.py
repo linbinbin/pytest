@@ -29,8 +29,10 @@ class Node:
         self.used = 0
         self.next = ''
         self.branch = []
-    def __cmp__(self, other):
-        return 1 if self.name > other.name else 0
+    def __lt__(self, other):
+        return self.name < other.name
+    def __gt__(self, other):
+        return self.name > other.name
 class Edge:
     """Edge info class"""
     def __init__(self, start, end, ndis, npok):
@@ -53,23 +55,22 @@ def getEdge(arr, i, j, edges, v, c, p):
         global pok
         cp = p
         if isWall(arr[i+a][j+b]) == 0:
+            if arr[i+a][j+b] == 'p':
+                cp = p - 1
+                pok += 1
             arr[i+a][j+b] = '*'
             if arr[i+2*a][j+2*b] == 0 or arr[i+2*a][j+2*b] == 'p':
                 vn = v
                 cn = c + 1
                 if arr[i+2*a][j+2*b] == 'p':
                     cp = p - 1
-                    pok += 1
+                    pok += 1                    
             else:
-                if type(arr[i+2*a][j+2*b]) != tuple:
-                    print(i+2*a, j+2*b, arr[i+2*a][j+2*b])
-                if arr[i+a][j+b] == 'p':
-                    cp = p - 1
-                    pok += 1
                 vn = arr[i+2*a][j+2*b][0]
                 if arr[i+2*a][j+2*b][1] == 'p':
                     cp = p - 1
-                    pok += 1
+                    if len(nodes[str(vn)].edges)==0:                    
+                        pok += 1
                 edges.append((v, vn, c, cp))
                 #edges_d["{0},{1}".format(v,vn)] = (v, vn, c, cp)
                 #edge_labels                
@@ -103,7 +104,7 @@ for i,j in it.product(cellidi, cellidj):
         nodes[str(vs)] = Node(i, j, str(vs))
                
 # Set Edge　for graph
-getEdge(arr, 21, 1, edges, 1, 1, 0)
+getEdge(arr, nodes['s'].x, nodes['s'].y, edges, 1, 1, 0)
 edge_labels=dict([((u,v,),(d, p))
              for u,v,d,p in edges])
 # Sort the Node's edge by p and d
@@ -130,7 +131,7 @@ for edge in nodes['s'].edges:
 while len(rout)>0:
     v = heapq.heappop(rout)[1]
     v.used = 1
-    print(len(rout))
+    #print(len(rout))
     for edge in v.edges:
         nn = edge[0] if str(edge[0]) != v.name else edge[1]
         vn = nodes[str(nn)]
@@ -146,14 +147,15 @@ while len(rout)>0:
                 elif vn.poks == v.poks + edge[3] and vn.dis > v.dis + edge[2]:
                     vn.dis = v.dis + edge[2]
                     vn.pre = v.name
-        try:
             heapq.heappush(rout, ((vn.poks, vn.dis),vn))
-        except:
-            print(vn)
+
+rp = ""
 v = nodes['t']
 while v.pre != '':
-    print(v.name, '->')            
+    rp += "{0}({1},{2})->".format(v.name, v.x, v.y)            
     v = nodes[v.pre]
+rp += "{0}({1},{2})".format(v.name, v.x, v.y)
+print(rp)
 # 残りのPを持つEdgeを探索
 #　最小ルート点と直接,最小ルート点からのルート追加
 #　追加したルートの点と直接
@@ -161,6 +163,7 @@ while v.pre != '':
 #　共通点ないEdge、tからダイクストラ法で最短ルートを探索
 #　既存ルートと共通点がある場合、共通点へのルート追加
 
+"""
 G = nx.Graph()
 srcs, dests = zip(* [(fr, to) for (fr, to, d, p) in edges])
 G.add_nodes_from(srcs + dests)
@@ -177,3 +180,4 @@ nx.draw_networkx_edge_labels(G,pos,edge_labels=edge_labels)
 plt.axis('off')
 plt.savefig('map.png', dpi=100)
 #plt.show()
+"""
