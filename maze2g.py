@@ -18,7 +18,7 @@ pok = 0
 
 class Node:
     """Node info class"""
-    def __init__(self, y, x, name):
+    def __init__(self, x, y, name):
         self.x = x
         self.y = y
         self.name = name
@@ -89,8 +89,8 @@ if not height % 2:
 if not width % 2:
     for i in range(height):
         arr[i].append('*')
-cellidj = range(1,width,2)
-cellidi = range(1,height,2)
+cellidi = range(1,width,2)
+cellidj = range(1,height,2)
 # Make Nodes
 for i,j in it.product(cellidi, cellidj):
     if arr[i][j] == 's' or arr[i][j] == 't':
@@ -104,8 +104,8 @@ for i,j in it.product(cellidi, cellidj):
         nodes[str(vs)] = Node(i, j, str(vs))
                
 # Set Edge　for graph
-#getEdge(arr, nodes['s'].x, nodes['s'].y, edges, 1, 1, 0)
-getEdge(arr, 3, 7, edges, 1, 1, 0)
+getEdge(arr, nodes['s'].x, nodes['s'].y, edges, 's', 1, 0)
+#getEdge(arr, 3, 7, edges, 1, 1, 0)
 edge_labels=dict([((u,v),(d, p))
              for u,v,d,p in edges])
 # Sort the Node's edge by p and d
@@ -115,7 +115,7 @@ for key in nodes:
 #        print([list(x) for x in nodes[key].edges])
 
 print([x for x in edges])
-print([(node[1].name, node[1].x, node[1].y) for node in nodes.items()])        
+print([(node[1].name, node[1].y+1, node[1].x+1) for node in nodes.items()])        
 print("Node:{0}, Edge:{1}, Pokemon:{2}".format(vs+1, len(edges), pok))
 #print([x for x in edges if x[0]=='s' or x[0]=='t' or x[1] == 's' or x[1] == 't'])
 
@@ -175,7 +175,7 @@ v = nodes['t']
 d = v.dis
 p = 0
 while v.pre != '':
-    rp += "{0}({1},{2}) <- ".format(v.name, v.x+1, v.y+1)            
+    rp += "{0}({1},{2}) <- ".format(v.name, v.y+1, v.x+1)            
     vp = nodes[v.pre]
     vp.next = v.name
     if (v.name, vp.name) in edgess:
@@ -185,7 +185,7 @@ while v.pre != '':
         p += edgess[(vp.name, v.name)][1]
         del edgess[(vp.name, v.name)]
     v = vp
-rp += "{0}({1},{2}) d:{3} p:{4}".format(v.name, v.x+1, v.y+1, d, -p)
+rp += "{0}({1},{2}) d:{3} p:{4}".format(v.name, v.y+1, v.x+1, d, -p)
 print(rp)
 
 # 残りのPを持つEdgeを探索
