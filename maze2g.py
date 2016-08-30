@@ -18,7 +18,7 @@ pok = 0
 
 class Node:
     """Node info class"""
-    def __init__(self, x, y, name):
+    def __init__(self, x, y, name, p):
         self.x = x
         self.y = y
         self.name = name
@@ -29,6 +29,7 @@ class Node:
         self.used = 0
         self.next = ''
         self.branch = []
+        self.pok = p
     def __lt__(self, other):
         return self.name < other.name
     def __gt__(self, other):
@@ -56,26 +57,28 @@ def getEdge(arr, i, j, edges, v, c, p):
         cp = p
         if isWall(arr[i+a][j+b]) == 0:
             if arr[i+a][j+b] == 'p':
-                cp = p - 1
+                cp -= 1
                 pok += 1
+                print(i+a, j+b)
             arr[i+a][j+b] = '*'
             if arr[i+2*a][j+2*b] == 0 or arr[i+2*a][j+2*b] == 'p':
                 vn = v
                 cn = c + 1
                 if arr[i+2*a][j+2*b] == 'p':
-                    cp = p - 1
-                    pok += 1                    
+                    cp -= 1
+                    pok += 1
+                    print(i+a*2, j+b*2)                    
             else:
                 vn = arr[i+2*a][j+2*b][0]
                 if arr[i+2*a][j+2*b][1] == 'p':
-                    cp = p - 1
                     if len(nodes[str(vn)].edges)==0:                    
                         pok += 1
                 edges.append((v, vn, c, cp))
+                edges.append((vn, v, c, cp))
                 #edges_d["{0},{1}".format(v,vn)] = (v, vn, c, cp)
                 #edge_labels                
                 nodes[str(v)].edges.append((v, vn, c, cp))
-                nodes[str(vn)].edges.append((v, vn, c, cp))
+                nodes[str(vn)].edges.append((vn, v, c, cp))
                 cn = 1
                 cp = 0
             getEdge(arr, i+2*a, j+2*b, edges, vn, cn, cp)
@@ -94,17 +97,18 @@ cellidj = range(1,height,2)
 # Make Nodes
 for i,j in it.product(cellidi, cellidj):
     if arr[i][j] == 's' or arr[i][j] == 't':
-        nodes[arr[i][j]] = Node(i, j, arr[i][j])        
+        nodes[arr[i][j]] = Node(i, j, arr[i][j], arr[i][j])        
         arr[i][j] = (arr[i][j], arr[i][j])
     elif getWalls(arr, i, j) == 2:
         arr[i][j] = 0 if arr[i][j] == ' ' else 'p'
     else:
         vs += 1
+        val = arr[i][j]
         arr[i][j] = (vs, arr[i][j])
-        nodes[str(vs)] = Node(i, j, str(vs))
+        nodes[str(vs)] = Node(i, j, str(vs), val)
                
 # Set Edge　for graph
-getEdge(arr, nodes['s'].x, nodes['s'].y, edges, 's', 1, 0)
+getEdge(arr, nodes['t'].x, nodes['t'].y, edges, 't', 1, 0)
 #getEdge(arr, 3, 7, edges, 1, 1, 0)
 edge_labels=dict([((u,v),(d, p))
              for u,v,d,p in edges])
@@ -126,27 +130,33 @@ outs = list()
 pathes = dict()
 nodes['s'].used = 1
 for edge in nodes['s'].edges:
-    nn = edge[0] if str(edge[0]) != 's' else edge[1]
+    nn = edge[1]
     vn = nodes[str(nn)]
-    vn.dis, vn.poks, vn.pre = edge[2], edge[3], 's'
+    vnpoks = edge[3]
+    if vn.pok == 'p':
+        vnpoks -= 1 
+    vn.dis, vn.poks, vn.pre = edge[2], vnpoks, 's'
     heapq.heappush(rout, ((vn.poks, vn.dis),vn))
 while len(rout)>0:
     v = heapq.heappop(rout)[1]
     v.used = 1
     #print(len(rout))
     for edge in v.edges:
-        nn = edge[0] if str(edge[0]) != v.name else edge[1]
+        nn = edge[1]
         vn = nodes[str(nn)]
         if vn.used == 0:
+            vnpoks = v.poks + edge[3] 
+            if vn.pok == 'p':
+                vnpoks -= 1
             if vn.dis == 0:
-                vn.poks = v.poks + edge[3]
+                vn.poks = vnpoks
                 vn.dis = v.dis + edge[2]
                 vn.pre = v.name
             else:
-                if vn.poks > v.poks + edge[3]:
-                    vn.poks = v.poks + edge[3]
+                if vn.poks > vnpoks:
+                    vn.poks = vnpoks
                     vn.pre = v.name            
-                elif vn.poks == v.poks + edge[3] and vn.dis > v.dis + edge[2]:
+                elif vn.poks == vnpoks and vn.dis > v.dis + edge[2]:
                     vn.dis = v.dis + edge[2]
                     vn.pre = v.name
             heapq.heappush(rout, ((vn.poks, vn.dis),vn))
@@ -173,16 +183,14 @@ edgess=dict([((str(u),str(v)),(d, p))
 rp = ""
 v = nodes['t']
 d = v.dis
-p = 0
+p = v.poks
 while v.pre != '':
     rp += "{0}({1},{2}) <- ".format(v.name, v.y+1, v.x+1)            
     vp = nodes[v.pre]
     vp.next = v.name
     if (v.name, vp.name) in edgess:
-        p += edgess[(v.name, vp.name)][1]
         del edgess[(v.name, vp.name)]
     else:
-        p += edgess[(vp.name, v.name)][1]
         del edgess[(vp.name, v.name)]
     v = vp
 rp += "{0}({1},{2}) d:{3} p:{4}".format(v.name, v.y+1, v.x+1, d, -p)
