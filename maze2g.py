@@ -6,10 +6,9 @@ import heapq
 import networkx as nx
 import matplotlib.pyplot as plt
 import math
-
-# 迷路をグラフにする：本質的に深さ優先探索
 import itertools as it
-vs = 0
+import csv
+
 edges = list()
 arr = list()
 vertices = dict()
@@ -51,12 +50,11 @@ def getWalls(arr, i, j):
     except:
         print(i,j)
         
-def getEdge(arr, i, j, edges, v, c, p, r, rr):
+def getEdge(arr, i, j, edges, v, c, p, lr):
     for (a,b) in zip([1,-1,0,0], [0,0,1,-1]):
         global pok
         cp = p
-        rn = r
-        rrn = rr
+        rn = list(lr)
         if isWall(arr[i+a][j+b]) == 0:
             if arr[i+a][j+b] == 'P':
                 cp -= 1
@@ -69,75 +67,66 @@ def getEdge(arr, i, j, edges, v, c, p, r, rr):
                     cp -= 1
                     pok += 1
                 rn.append((i+a, j+b))
-                rn.append((i+a*2, j+b*2)) 
-                rrn.append((i+a, j+b))
-                rrn.append((i+a*2, j+b*2))                                   
+                rn.append((i+a*2, j+b*2))                                   
             else:
-                rn.append((i+a, j+b))
-                rrn.append((i+a, j+b))                 
+                rn.append((i+a, j+b))           
                 vn = arr[i+2*a][j+2*b][0]
                 if arr[i+2*a][j+2*b][1] == 'P':
                     if len(vertices[str(vn)].edges)==0:                    
                         pok += 1
+                rrn = list(rn)
                 rrn.reverse()
-                edges.append((str(v), str(vn), c, cp, r))
-                edges.append((str(vn), str(v), c, cp, rr))
-                #edges_d["{0},{1}".format(v,vn)] = (v, vn, c, cp)
-                #edge_labels                
+                edges.append((str(v), str(vn), c, cp, rn))
+                edges.append((str(vn), str(v), c, cp, rrn))               
                 vertices[str(v)].edges.append((str(v), str(vn), c, cp))
                 vertices[str(vn)].edges.append((str(vn), str(v), c, cp))
                 cn = 1
                 cp = 0
                 rn = list()
-                rrn = list()
-            getEdge(arr, i+2*a, j+2*b, edges, vn, cn, cp, rn, rrn)
+            getEdge(arr, i+2*a, j+2*b, edges, vn, cn, cp, rn)
+    del lr
 
-for line in open('input_file', 'r'):
-    arr.append(list(line))
-height = len(arr)
-width = len(arr[height - 1])
-if not height % 2:
-    arr.append(['*' for x in range(width)])
-if not width % 2:
-    for i in range(height):
-        arr[i].append('*')
-cellidi = range(1,width,2)
-cellidj = range(1,height,2)
-# Make vertices
-for i,j in it.product(cellidi, cellidj):
-    if arr[i][j] == 'S' or arr[i][j] == 'G':
-        vertices[arr[i][j]] = Vertice(i, j, arr[i][j], arr[i][j])        
-        arr[i][j] = (arr[i][j], arr[i][j])
-    elif arr[i][j] == 'P':
-        vs += 1
-        val = arr[i][j]
-        arr[i][j] = (vs, arr[i][j])
-        vertices[str(vs)] = Vertice(i, j, str(vs), val)
-    elif getWalls(arr, i, j) == 2:
-        arr[i][j] = 0 if arr[i][j] == ' ' else 'P'
-    else:
-        vs += 1
-        val = arr[i][j]
-        arr[i][j] = (vs, arr[i][j])
-        vertices[str(vs)] = Vertice(i, j, str(vs), val)
- 
-lr = list()
-lrr = list()            
+def read_maze(file_name, arr, vertices):
+    vs = 0
+    for line in open(file_name, 'r'):
+        arr.append(list(line))
+    height = len(arr)
+    width = len(arr[height - 1])
+    cellidi = range(1,width,2)
+    cellidj = range(1,height,2)
+    # Make vertices
+    for i,j in it.product(cellidi, cellidj):
+        if arr[i][j] == 'S' or arr[i][j] == 'G':
+            vertices[arr[i][j]] = Vertice(i, j, arr[i][j], arr[i][j])        
+            arr[i][j] = (arr[i][j], arr[i][j])
+        elif arr[i][j] == 'P':
+            vs += 1
+            val = arr[i][j]
+            arr[i][j] = (vs, arr[i][j])
+            vertices[str(vs)] = Vertice(i, j, str(vs), val)
+        elif getWalls(arr, i, j) == 2:
+            arr[i][j] = 0 if arr[i][j] == ' ' else 'P'
+        else:
+            vs += 1
+            val = arr[i][j]
+            arr[i][j] = (vs, arr[i][j])
+            vertices[str(vs)] = Vertice(i, j, str(vs), val)
+
+#read_maze('input_file', arr, vertices) 
+read_maze('maze2.txt', arr, vertices) 
+
+lr = list()          
 # Set Edge　for graph
-getEdge(arr, vertices['G'].x, vertices['G'].y, edges, 'G', 1, 0, lr, lrr)
-#getEdge(arr, 3, 7, edges, 1, 1, 0)
+getEdge(arr, vertices['G'].x, vertices['G'].y, edges, 'G', 1, 0, lr)
 edge_labels=dict([((u,v),(d, p))
              for u,v,d,p,r in edges])
 # Sort the vertice's edge by p and d
 for key in vertices:
     vertices[key].edges.sort(key=lambda x:(x[3], x[2]))
-#    if len(vertices[key].edges)>2:
-#        print([list(x) for x in vertices[key].edges])
 
 print([x for x in edges])
 print([(vertice[1].name, vertice[1].y+1, vertice[1].x+1) for vertice in vertices.items()])        
-print("vertice:{0}, Edge:{1}, Pokemon:{2}".format(vs+1, len(edges), pok))
-#print([x for x in edges if x[0]=='S' or x[0]=='G' or x[1] == 'S' or x[1] == 'G'])
+print("vertice:{0}, Edge:{1}, Pokemon:{2}".format(len(vertices), len(edges), pok))
 
 # ダイクストラ法でｓ->t,Pの最小ルートを探索（P最大）
 rout = list()
@@ -157,19 +146,19 @@ while len(rout)>0:
         nn = edge[1]
         vn = vertices[str(nn)]
         if vn.used == 0:
-            vnpoks = v.poks + edge[3] 
+            vnpoks = v.poks - edge[3] 
             if vn.pok == 'P':
                 vnpoks -= 1
             if vn.dis == 0:
                 vn.poks = vnpoks
-                vn.dis = v.dis + edge[2]
+                vn.dis = v.dis - edge[2]
                 vn.pre = v.name
             else:
                 if vn.poks > vnpoks:
                     vn.poks = vnpoks
                     vn.pre = v.name            
-                elif vn.poks == vnpoks and vn.dis > v.dis + edge[2]:
-                    vn.dis = v.dis + edge[2]
+                elif vn.poks == vnpoks and vn.dis > v.dis - edge[2]:
+                    vn.dis = v.dis - edge[2]
                     vn.pre = v.name
             heapq.heappush(rout, ((vn.poks, vn.dis),vn))
 """
@@ -273,21 +262,60 @@ for e in edgess.items():
         e[1][2] = 1
         edgess[(e[0][1], e[0][0])][2] = 1
 """
-def pbr(v):
-    print(v.name, v.x, v.y)
+def pbr(wf, vn, vertices, edgess):
+    v = vertices[vn]
+    print("{0},{1}".format(v.x, v.y))
+    wf.write("{0},{1}\n".format(v.x, v.y))
     for n in v.branch:
         for x, y in edgess[(v.name, n)][3]:
-            print(x, y)
-        pbr(vertices[n])
+            print("{0},{1}".format(x, y))
+            wf.write("{0},{1}\n".format(x, y))
+        pbr(wf, n, vertices, edgess)
         for x, y in edgess[(n,v.name)][3]:
-            print(x, y)
-        print(vertices[n].x, vertices[n].x)
-vo = ""
-#print(vertices['S'].x, vertices['S'].y)
-for v in main_rout:
-    if vo != "":
-        for x, y in edgess[(vo,v)][3]:
-            print(x, y)
-    vo = v 
-    pbr(vertices[v])
-    print(v, vertices[v].x, vertices[v].y)           
+            print("{0},{1}".format(x, y))
+            wf.write("{0},{1}\n".format(x, y))
+        print("{0},{1}".format(v.x, v.y))
+        wf.write("{0},{1}\n".format(v.x, v.y))
+
+def print_out(file_name, main_rout, edgess, vertices):
+    vo = ""
+    with open(file_name, 'w') as f:
+        for v in main_rout:
+            if vo != "":
+                for x, y in edgess[(vo,v)][3]:
+                    print("{0},{1}".format(x, y))
+                    f.write("{0},{1}\n".format(x, y))
+            vo = v 
+            if len(vertices[v].branch) > 0:    
+                pbr(f, v, vertices, edgess)   
+            if len(vertices[v].branch) == 0:
+                print("{0},{1}".format(vertices[v].x, vertices[v].y))
+                f.write("{0},{1}\n".format(vertices[v].x, vertices[v].y))
+print_out('output_file', main_rout, edgess, vertices)
+
+def chk_rout():
+    arr = list()
+#    for line in open('input_file', 'r'):
+    for line in open('maze2.txt', 'r'):
+        arr.append(list(line))
+    for line in arr:
+        l = ""
+        for txt in line[:-1]:
+            l += str(txt)
+        print(l) 
+    csv_reader = csv.reader(open("output_file", "r"), delimiter=",")
+    org = None
+    for row in csv_reader:
+        if org != None:
+            if abs(int(row[0]) - int(org[0])) + abs(int(row[1])-int(org[1])) != 1 or arr[int(row[0])][int(row[1])] == '*' :
+                print("err at ", row)
+                break
+            else:
+                arr[int(row[0])][int(row[1])] = ' '
+        org = row
+    for line in arr:
+        l = ""
+        for txt in line[:-1]:
+            l += str(txt)
+        print(l)
+chk_rout()    
