@@ -92,26 +92,31 @@ def read_maze(file_name, arr, vertices):
         arr.append(list(line))
     height = len(arr)
     width = len(arr[height - 1])
-    cellidi = range(1,width,2)
-    cellidj = range(1,height,2)
+    cellidi = range(1,height,2)
+    cellidj = range(1,width,2)
     # Make vertices
     for i,j in it.product(cellidi, cellidj):
-        if arr[i][j] == 'S' or arr[i][j] == 'G':
-            vertices[arr[i][j]] = Vertice(i, j, arr[i][j], arr[i][j])        
-            arr[i][j] = (arr[i][j], arr[i][j])
-        elif arr[i][j] == 'P':
-            vs += 1
-            val = arr[i][j]
-            arr[i][j] = (vs, arr[i][j])
-            vertices[str(vs)] = Vertice(i, j, str(vs), val)
-        elif getWalls(arr, i, j) == 2:
-            arr[i][j] = 0 if arr[i][j] == ' ' else 'P'
-        else:
-            vs += 1
-            val = arr[i][j]
-            arr[i][j] = (vs, arr[i][j])
-            vertices[str(vs)] = Vertice(i, j, str(vs), val)
-
+        try:
+            if arr[i][j] == '*':
+                continue
+            if arr[i][j] == 'S' or arr[i][j] == 'G':
+                vertices[arr[i][j]] = Vertice(i, j, arr[i][j], arr[i][j])        
+                arr[i][j] = (arr[i][j], arr[i][j])
+            elif arr[i][j] == 'P':
+                vs += 1
+                val = arr[i][j]
+                arr[i][j] = (vs, arr[i][j])
+                vertices[str(vs)] = Vertice(i, j, str(vs), val)
+                print('p', str(vs), i, j)
+            elif getWalls(arr, i, j) == 2 and arr[i][j] == ' ':
+                arr[i][j] = 0
+            else:
+                vs += 1
+                val = arr[i][j]
+                arr[i][j] = (vs, arr[i][j])
+                vertices[str(vs)] = Vertice(i, j, str(vs), val)
+        except:
+            print("error: ", i, j)
 #read_maze('input_file', arr, vertices) 
 read_maze('maze2.txt', arr, vertices) 
 
@@ -124,8 +129,8 @@ edge_labels=dict([((u,v),(d, p))
 for key in vertices:
     vertices[key].edges.sort(key=lambda x:(x[3], x[2]))
 
-print([x for x in edges])
-print([(vertice[1].name, vertice[1].y+1, vertice[1].x+1) for vertice in vertices.items()])        
+print([(x[0], x[1])for x in edges])
+print([(vertice[1].name, vertice[1].y+1, vertice[1].x+1, vertice[1].pok) for vertice in vertices.items()])        
 print("vertice:{0}, Edge:{1}, Pokemon:{2}".format(len(vertices), len(edges), pok))
 
 # ダイクストラ法でｓ->t,Pの最小ルートを探索（P最大）
@@ -151,14 +156,14 @@ while len(rout)>0:
                 vnpoks -= 1
             if vn.dis == 0:
                 vn.poks = vnpoks
-                vn.dis = v.dis - edge[2]
+                vn.dis = v.dis + edge[2]
                 vn.pre = v.name
             else:
                 if vn.poks > vnpoks:
                     vn.poks = vnpoks
                     vn.pre = v.name            
-                elif vn.poks == vnpoks and vn.dis > v.dis - edge[2]:
-                    vn.dis = v.dis - edge[2]
+                elif vn.poks == vnpoks and vn.dis > v.dis + edge[2]:
+                    vn.dis = v.dis + edge[2]
                     vn.pre = v.name
             heapq.heappush(rout, ((vn.poks, vn.dis),vn))
 """
@@ -224,12 +229,11 @@ for vs in vertices.items():
     v = vs[1]
     if v.pok == 'P' and v.used != 2:
         v.used = 2
+        vertices[v.pre].branch.append(v.name)
         while v.pre != '' and vertices[v.pre].used != 2:
              vertices[v.pre].used = 2
-             vertices[v.pre].branch.append(v.name)
-             edgess[(vertices[v.pre].name, v.name)][2] = 1
-             edgess[(v.name, vertices[v.pre].name)][2] = 1
              v = vertices[v.pre]
+             vertices[v.pre].branch.append(v.name)             
 """
 #　残りのP edgessを追加
 for e in edgess.items():
@@ -310,8 +314,7 @@ def chk_rout():
             if abs(int(row[0]) - int(org[0])) + abs(int(row[1])-int(org[1])) != 1 or arr[int(row[0])][int(row[1])] == '*' :
                 print("err at ", row)
                 break
-            else:
-                arr[int(row[0])][int(row[1])] = ' '
+        arr[int(row[0])][int(row[1])] = ' '
         org = row
     for line in arr:
         l = ""
