@@ -47,8 +47,9 @@ def getWalls(arr, i, j):
     except:
         logger.error('x:{0}, y:{1}'.format(i,j))
         
-def read_maze(file_name, arr, vertices, poks):
+def read_maze(file_name, arr, vertices):
     vs = 0
+    global pok
     for line in open(file_name, 'r'):
         arr.append(list(line))
     height = len(arr)
@@ -66,7 +67,7 @@ def read_maze(file_name, arr, vertices, poks):
                 arr[i][j] = (val, val)
             elif arr[i][j] == 'P':
                 vs += 1
-                poks += 1
+                pok += 1
                 val = arr[i][j]
                 arr[i][j] = (vs, arr[i][j])
                 vertices[str(vs)] = Vertice(i, j, str(vs), val)
@@ -97,8 +98,8 @@ def getEdge(arr, lv, i, j, vertices, edges, c, lr):
                 vn = arr[i+2*a][j+2*b][0]
                 rrn = list(rn)
                 rrn.reverse()
-                cp = 1 if lv[0].pok == 'P' else 0
-                p = 1 if vertices[str(vn)].pok == 'P' else 0
+                cp = 0 if lv[0].pok == 'P' else 0
+                p = 0 if vertices[str(vn)].pok == 'P' else 0
                 edges.append((lv[0].name, str(vn), c, p, rn))
                 edges.append((str(vn), lv[0].name, c, cp, rrn))               
                 lv[0].edges.append((lv[0].name, str(vn), c, p))
@@ -203,7 +204,7 @@ def mkgraph(vertices, edges):
     """
 
 def search_p(edgess,vertice):
-    vertice.use = 2
+    vertice.used = 2
     for e in vertice.edges:
         if (e[3] > 0 or vertices[e[1]].pok == 'P') and vertices[e[1]].used != 2:
             vertice.branch.append(e[1])
@@ -272,11 +273,12 @@ if __name__ == "__main__":
     arr = list()
     vertices = dict()
     edges_d = dict()
+    global pok
     pok = 0 
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input', default='input_file', help='in put file name')
-    parser.add_argument('-o', '--out', default='output_file', help='out put file name')
+    parser.add_argument('input', default='input_file', help='in put file name')
+    parser.add_argument('out', default='output_file', help='out put file name')
     parser.add_argument('-g', '--grf', action='store_true', help='make the Node graph')
     parser.add_argument('-c', '--chk', action='store_true', help='check the out file')
     parser.add_argument('-d', '--dbg', action='store_true', help='show the debug log')
@@ -285,7 +287,7 @@ if __name__ == "__main__":
     cmd = parser.parse_args()
     # Logging
     if cmd.logf:
-        handler = FileHandler('log.txt')
+        handler = FileHandler('log.txt', 'w')
     if cmd.dbg:
         handler.setLevel(DEBUG)
         logger.setLevel(DEBUG)
@@ -295,7 +297,7 @@ if __name__ == "__main__":
     logger.addHandler(handler)
 
     #read_maze('input_file', arr, vertices) 
-    read_maze(cmd.input, arr, vertices, pok) 
+    read_maze(cmd.input, arr, vertices) 
     #rout list
     lr = list()
     #vertice list
