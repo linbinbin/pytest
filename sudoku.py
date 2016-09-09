@@ -12,6 +12,44 @@ def print_matrix(m):
 	for row in m:
 		print(row)
 
+def chk_pos(matrix, i, j, value):
+	if value in matrix[i]:
+		return False
+	for r in range(len(matrix)):
+		if matrix[r][j] == value:
+			return False
+	x = int(i/3)
+	y = int(j/3)
+	for r,c in it.product([0,1,2], [0,1,2]):
+		try:
+			if matrix[x*3+r][y*3+c] == value:
+				return False
+		except:
+			print('x:{0}, y:{1}, r:{2}, c:{3}, i:{4}, j:{5}'.format(x,y,r,c,i,j))
+	return True
+
+def sudoku(matrix):
+	#print_matrix(matrix)
+	x = 0
+	y = 0
+	for i,j in it.product([0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8]):
+		if matrix[i][j] == 0:
+			x, y = i, j
+			#print(x,y)
+			break
+	else:
+		print_matrix(matrix)
+		exit(0)
+
+	for value in range(1,10):
+		if chk_pos(matrix, x, y, value):
+			matrix[i][j] = value
+			if not sudoku(matrix):
+				matrix[i][j] = 0
+	return False
+
+
+"""
 def sudoku(matrix):
 	vs = {"r1":[[1,2,3,4,5,6,7,8,9],[]], "r2":[[1,2,3,4,5,6,7,8,9],[]], "r3":[[1,2,3,4,5,6,7,8,9],[]],\
 		"r4":[[1,2,3,4,5,6,7,8,9],[]], "r5":[[1,2,3,4,5,6,7,8,9],[]], "r6":[[1,2,3,4,5,6,7,8,9],[]],\
@@ -48,9 +86,9 @@ def sudoku(matrix):
 	v = vs[key]
 	#print(length, key)
 	#print(v)
-	#print_matrix(matrix)
-	for val in v[0]:
-		for pos in v[1]:
+	print_matrix(matrix)
+	for pos in v[1]:
+		for val in v[0]:
 			if val in vs['r'+str(pos[0]+1)][0] and val in vs['c'+str(pos[1]+1)][0] and val in vs['m'+str(int(pos[0]/3+1))+str(int(pos[1]/3+1))][0]:
 				if matrix[pos[0]][pos[1]] != 0:
 					print(pos[0], pos[1], matrix[pos[0]][pos[1]])
@@ -61,7 +99,7 @@ def sudoku(matrix):
 				if not sudoku(matrix):
 					matrix[pos[0]][pos[1]] = 0
 	return False
-
+"""
 if __name__ == "__main__":
 	handler = FileHandler('log.txt', 'w')
 	handler.setLevel(DEBUG)
