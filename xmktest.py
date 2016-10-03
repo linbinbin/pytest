@@ -163,8 +163,13 @@ if [ $? -ne 0 ] ; then
 	exit 1
 fi
 
-cmp  $WORKDIR/out.xml $WORKDIR/valid
-if [ $? -ne 0 ] ; then        
+rm -f tmp.txt
+diff $WORKDIR/out.xml $WORKDIR/valid > tmp.txt
+if [ -f "tmp.txt" ] ; then
+    l1=`grep -e ^"[<|>]" tmp.txt | wc -l`
+    l2=`grep -e ">20[0-9][0-9]/[0-9][0-9]/[0-9][0-9]" tmp.txt | wc -l`
+fi
+if [ $l1 -ne $l2 ] ; then
     echo "cmp $WORKDIR/out.xml <=> $WORKDIR/valid failure"
     exit 1
 fi
