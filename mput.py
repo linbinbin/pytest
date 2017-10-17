@@ -2,7 +2,7 @@
 # coding: utf-8
 
 #!/usr/bin/python
-
+import subprocess
 import base64
 import sys
 import os
@@ -12,11 +12,17 @@ import hmac
 import hashlib
 import requests
 from requests.auth import HTTPProxyAuth
+from requests.exceptions import ProxyError
 import time
 from datetime import datetime
 from optparse import OptionParser
 from logging import getLogger,StreamHandler,FileHandler,DEBUG,ERROR
+from selenium import webdriver
 logger = getLogger(__name__)
+
+fir=webdriver.Firefox()
+fir.get("https://www.google.com")
+fir.quit()
 
 proxies_s = {
 "http":'http://"FJT02198":"!QAZ5tgb"@10.16.1.103:8080',
@@ -43,20 +49,22 @@ class K5:
         return self._outfile
         
     def GetToken(self):
-        s = requests.Session()
-        s.mount("http://", requests.adapters.HTTPAdapter(max_retries=1))
-        s.mount("https://", requests.adapters.HTTPAdapter(max_retries=1))
-        #s.keep_alive = True
-        s.proxies = proxies_s
-        #s.auth = auth
-        self.session = s
-        #r = s.get("https://www.google.co.jp/", proxies=proxies, auth=auth)
-        #print(r)
-        headers = {"Accept": "application/json", "Content-Type" : "application/json", "User-Agent":"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36"}
-        resp=s.post(URL_TOKEN, headers=headers, json=TOKEN_BODY, timeout=(10, 30))
-        self.token = resp.headers['X-Subject-Token']
-        logger.debug("Token: {0}".format(self.token))
-        
+        try:
+            s = requests.Session()
+            #s.keep_alive = False
+            s.trust_env=False
+            s.proxies = proxies_s
+            s.auth = auth
+            self.session = s
+            #r = s.get("https://www.google.co.jp/", proxies=proxies)
+            #print(r)
+            headers = {"Accept": "application/json", "Content-Type" : "application/json", "User-Agent":"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36"}
+            resp=s.post(URL_TOKEN, headers=headers, json=TOKEN_BODY, timeout=(10, 30))
+            self.token = resp.headers['X-Subject-Token']
+            logger.debug("Token: {0}".format(self.token))
+            #print("Proxy with request headers:{0}".format(self.session.headers))
+        except ProxyError:
+            print("Proxy Error with request headers:{0}".format(self.session.headers))
     def PutData(self):
         s = self.session
         headers = {"Content-Type": "application/octet-stream", "Content-Length": 'os.stat("3G.dummy").st_size', "X-Detect-Content-Type" : "True", "X-Auth-Token":self.token, \
@@ -77,6 +85,7 @@ if __name__ == '__main__':
     logger.setLevel(DEBUG)
     logger.addHandler(shandler)
     logger.addHandler(fhandler)
+    #subprocess.call('curl -p --proxy-user FJT02198:!QAZ5tgb -x 10.16.1.103:8080 -L https://www.google.c')
     k5=K5(args[0], "{0}_{1}_{2}".format(args[1], args[2], args[3]))
     k5.GetToken()
     start = time.time()
