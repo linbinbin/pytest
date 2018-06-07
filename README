@@ -1,4 +1,6 @@
-pytest
-======
-
-My python test
+pytest Reference
+================
+1.main_run.py   call jar, write log rolling, write windows event
+2.probe_all.sh  wait shell subscript
+3.
+4.
